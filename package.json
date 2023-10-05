@@ -1,0 +1,29 @@
+{
+  "name": "@pixelogic/gpt",
+  "version": "1.0.0",
+  "description": "A ChatGPT library for simple integrations with OpenAi's ChatGPT models",
+  "main": "index.ts",
+  "dependencies": {
+    "typescript": "^5.2.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "publish": "npm run build && npm publish --access public",
+    "publish patch": "npm version patch && npm run publish",
+    "publish minor": "npm version minor && npm run publish",
+    "publish major": "npm version major && npm run publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/durban-pixelogic/pixelogic-gpt.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/durban-pixelogic/pixelogic-gpt/issues"
+  },
+  "homepage": "https://github.com/durban-pixelogic/pixelogic-gpt#readme",
+  "devDependencies": {
+    "vitest": "^0.34.6"
+  }
+}
