@@ -4,9 +4,14 @@
   "description": "A ChatGPT library for simple integrations with OpenAi's ChatGPT models",
   "main": "index.ts",
   "dependencies": {
+    "@types/json-schema": "^7.0.13",
+    "ajv": "^8.12.0",
+    "gpt-tokenizer": "^2.1.2",
+    "openai": "^4.11.1",
     "typescript": "^5.2.2"
   },
   "scripts": {
+    "test": "npx vitest",
     "build": "tsc",
     "publish": "npm run build && npm publish --access public",
     "publish patch": "npm version patch && npm run publish",
