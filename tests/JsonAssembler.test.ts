@@ -1,6 +1,6 @@
 import { describe, test } from "vitest";
 import { encode, decodeGenerator } from "gpt-tokenizer";
-import JsonAssembler from "../src/JsonAssembler";
+import { JsonAssembler } from "../src/JsonAssembler";
 import { json_test_cases } from "./samples_cases";
 
 describe("Tests for JsonAssembler", () => {
