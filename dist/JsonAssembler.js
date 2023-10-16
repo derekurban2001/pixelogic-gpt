@@ -136,6 +136,7 @@ class JsonAssembler {
             if (!output_primitive)
                 return output_primitive;
             // Convert output_primitive to corresponding types (number, boolean, null, undefined)
+            output_primitive = output_primitive.replace(/\\n/g, "");
             const num = parseFloat(output_primitive);
             if (!isNaN(num)) {
                 return num;

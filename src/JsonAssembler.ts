@@ -221,7 +221,7 @@ export class JsonAssembler {
 
     // Convert output_primitive to corresponding types (number, boolean, null, undefined)
 
-    output_primitive = output_primitive.replace(/\\n/g, "");
+    output_primitive = output_primitive.replace(/\n/g, "");
 
     const num = parseFloat(output_primitive);
 
