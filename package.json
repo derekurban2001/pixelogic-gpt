@@ -1,8 +1,9 @@
 {
   "name": "@pixelogic/gpt",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "description": "A ChatGPT library for simple integrations with OpenAi's ChatGPT models",
-  "main": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "dependencies": {
     "@types/json-schema": "^7.0.13",
     "ajv": "^8.12.0",
