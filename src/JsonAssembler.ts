@@ -24,20 +24,29 @@ export class JsonAssembler {
   constructor(options: {
     text?: string;
     iterator?: AsyncIterator<string> | Iterator<string>;
+    stream_reader?: ReadableStreamDefaultReader<string>;
     onStart?: () => void;
     onUpdate?: (json: object) => void;
     onEnd?: (json: object) => void;
   }) {
-    const { text, iterator, onStart, onUpdate, onEnd } = options;
-    if (text && iterator)
+    const { text, iterator, stream_reader, onStart, onUpdate, onEnd } = options;
+    if (
+      (text && iterator) ||
+      (text && stream_reader) ||
+      (iterator && stream_reader)
+    )
       throw Error(
-        'Please initialize only one of "text" or "iterator", not both.'
+        'Please initialize only one of "text", "iterator", or "stream_reader".'
       );
-    if (!text && !iterator)
-      throw Error('Please initialize one of "text" or "iterator".');
+    if (!text && !iterator && !stream_reader)
+      throw Error(
+        'Please initialize one of "text", "iterator" or "stream_reader".'
+      );
 
     if (iterator) this.text_manager = new IteratorTextManager(iterator);
     else if (text) this.text_manager = new StaticTextManager(text);
+    else if (stream_reader)
+      this.text_manager = new StreamTextManager(stream_reader);
     else throw Error("Couldn't instantiate a text manager");
 
     this.onStart = onStart;
@@ -251,6 +260,55 @@ type NextCharacterOptions = {
 interface TextManager {
   nextChar: (options?: NextCharacterOptions) => Promise<string | null>;
   returnChar: (char: string) => void;
+}
+
+class StreamTextManager implements TextManager {
+  private stream_reader: ReadableStreamDefaultReader<string>;
+  private buffer: string;
+
+  private test: string = "";
+  constructor(stream_reader: ReadableStreamDefaultReader<string>) {
+    this.stream_reader = stream_reader;
+    this.buffer = "";
+  }
+
+  public nextCharFromStream = async () => {
+    if (this.buffer.length == 0) {
+      const { value, done } = await this.stream_reader.read();
+      if (value && !done) this.buffer += value;
+    }
+    if (this.buffer.length > 0) {
+      const char = this.buffer.charAt(0);
+      this.buffer = this.buffer.slice(1, this.buffer.length);
+      return char;
+    }
+    return null;
+  };
+
+  public nextChar = async (options?: NextCharacterOptions | undefined) => {
+    // If text is empty, return null
+    let char = await this.nextCharFromStream();
+
+    // Iterate until find character or end of text
+
+    if (options?.until) {
+      while (char && !options.until.includes(char)) {
+        char = await this.nextCharFromStream();
+      }
+    } else if (options?.skip) {
+      // Skip characters which are included in 'skip' option
+
+      while (char && options.skip.includes(char)) {
+        char = await this.nextCharFromStream();
+      }
+    }
+
+    return char;
+  };
+
+  public returnChar = (char: string) => {
+    this.buffer = char + this.buffer;
+  };
 }
 
 class IteratorTextManager implements TextManager {

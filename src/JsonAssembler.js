@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.JsonAssembler = void 0;
 const IGNORED_CHARACTERS = [" ", "\n", "\t", "\r"];
 const TERMINATION_CHARACTERS = [",", "]", "}"];
 // This class assembles the JSON
@@ -162,15 +163,19 @@ class JsonAssembler {
             if (this.onUpdate && this.root_json)
                 this.onUpdate(this.root_json);
         };
-        const { text, iterator, onStart, onUpdate, onEnd } = options;
-        if (text && iterator)
-            throw Error('Please initialize only one of "text" or "iterator", not both.');
-        if (!text && !iterator)
-            throw Error('Please initialize one of "text" or "iterator".');
+        const { text, iterator, stream_reader, onStart, onUpdate, onEnd } = options;
+        if ((text && iterator) ||
+            (text && stream_reader) ||
+            (iterator && stream_reader))
+            throw Error('Please initialize only one of "text", "iterator", or "stream_reader".');
+        if (!text && !iterator && !stream_reader)
+            throw Error('Please initialize one of "text", "iterator" or "stream_reader".');
         if (iterator)
             this.text_manager = new IteratorTextManager(iterator);
         else if (text)
             this.text_manager = new StaticTextManager(text);
+        else if (stream_reader)
+            this.text_manager = new StreamTextManager(stream_reader);
         else
             throw Error("Couldn't instantiate a text manager");
         this.onStart = onStart;
@@ -178,7 +183,47 @@ class JsonAssembler {
         this.onEnd = onEnd;
     }
 }
-exports.default = JsonAssembler;
+exports.JsonAssembler = JsonAssembler;
+class StreamTextManager {
+    constructor(stream_reader) {
+        this.test = "";
+        this.nextCharFromStream = () => __awaiter(this, void 0, void 0, function* () {
+            if (this.buffer.length == 0) {
+                const { value, done } = yield this.stream_reader.read();
+                if (value && !done)
+                    this.buffer += value;
+            }
+            if (this.buffer.length > 0) {
+                const char = this.buffer.charAt(0);
+                this.buffer = this.buffer.slice(1, this.buffer.length);
+                return char;
+            }
+            return null;
+        });
+        this.nextChar = (options) => __awaiter(this, void 0, void 0, function* () {
+            // If text is empty, return null
+            let char = yield this.nextCharFromStream();
+            // Iterate until find character or end of text
+            if (options === null || options === void 0 ? void 0 : options.until) {
+                while (char && !options.until.includes(char)) {
+                    char = yield this.nextCharFromStream();
+                }
+            }
+            else if (options === null || options === void 0 ? void 0 : options.skip) {
+                // Skip characters which are included in 'skip' option
+                while (char && options.skip.includes(char)) {
+                    char = yield this.nextCharFromStream();
+                }
+            }
+            return char;
+        });
+        this.returnChar = (char) => {
+            this.buffer = char + this.buffer;
+        };
+        this.stream_reader = stream_reader;
+        this.buffer = "";
+    }
+}
 class IteratorTextManager {
     constructor(async_iterator) {
         this.test = "";

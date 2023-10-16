@@ -27,13 +27,10 @@ var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _ar
     function reject(value) { resume("throw", value); }
     function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PixelogicGpt = void 0;
 const openai_1 = require("openai");
-const JsonAssembler_1 = __importDefault(require("./JsonAssembler"));
+const JsonAssembler_1 = require("./JsonAssembler");
 class PixelogicGpt {
     constructor(api_key, options) {
         this.chatCompletion = (args, json) => __awaiter(this, void 0, void 0, function* () {
@@ -140,7 +137,7 @@ class PixelogicGpt {
         return __awaiter(this, void 0, void 0, function* () {
             if (!function_call)
                 throw Error("Function Call Failed");
-            const json_assembler = new JsonAssembler_1.default({ text: function_call.arguments });
+            const json_assembler = new JsonAssembler_1.JsonAssembler({ text: function_call.arguments });
             return yield json_assembler.assemble();
         });
     }

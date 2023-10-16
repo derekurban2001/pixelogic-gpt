@@ -5,6 +5,23 @@ import { json_test_cases } from "./samples_cases";
 
 describe("Tests for JsonAssembler", () => {
   const createMockStream = (json_string: string) => {
+    const generator = createMockIterator(json_string);
+
+    return new ReadableStream({
+      start(controller) {
+        async function push() {
+          for await (let value of generator) {
+            controller.enqueue(value);
+          }
+          controller.close();
+        }
+
+        push();
+      },
+    });
+  };
+
+  const createMockIterator = (json_string: string) => {
     const tokens = encode(json_string);
     const generator = decodeGenerator(tokens);
     return generator;
@@ -18,9 +35,16 @@ describe("Tests for JsonAssembler", () => {
         value.json
       );
 
+      const text_iterator = createMockIterator(json_string);
+      expect(
+        await new JsonAssembler({ iterator: text_iterator }).assemble()
+      ).toEqual(value.json);
+
       const text_stream = createMockStream(json_string);
       expect(
-        await new JsonAssembler({ iterator: text_stream }).assemble()
+        await new JsonAssembler({
+          stream_reader: text_stream.getReader(),
+        }).assemble()
       ).toEqual(value.json);
     });
   });
